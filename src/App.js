@@ -4,7 +4,7 @@ import {hsvToCanvas, randRange, randSpread, sfc32, toRad, xmur3} from './utils.j
 
 
 class SpreadGenerator {
-  constructor(base, spread) {
+  constructor(base) {
     this.base = base
     this.spread = 0
   }
@@ -14,24 +14,37 @@ class SpreadGenerator {
   }
 }
 
+class FixedGenerator {
+  constructor(defaultValue) {
+    this.value = defaultValue
+  }
+  generate(random) {
+    return this.value
+  }
+}
+
+
 let mainDoc = {
   title:'a doc',
   maxDepth:{
     _type:'fixed',
     _title:'max depth',
-    value:4
+    defaultValue:4,
+    gen: new FixedGenerator(4),
   },
   trunk: {
     _title: 'Trunk',
     width: {
       _type:'fixed',
       _title:'width',
-      value:10,
+      defaultValue:10,
+      gen: new FixedGenerator(10),
     },
     height: {
       _title:'Height',
       _type:'fixed',
-      value:70,
+      defaultValue:70,
+      gen: new FixedGenerator(70),
     },
     type: {
       _title:'Shape',
@@ -42,8 +55,8 @@ let mainDoc = {
     attenuation: {
       _title:'Attenuation',
       _type:'spread',
-      base:0.8,
-      spread:0.1,
+      defaultValue:0.8,
+      gen:new SpreadGenerator(0.8),
     }
   },
   leaf: {
@@ -63,16 +76,17 @@ let mainDoc = {
     angle: {
       _title:'Angle',
       _type:'spread',
-      base:0,
-      spread:45,
+      defaultValue: 0,
+      gen: new SpreadGenerator(0),
     }
   },
   branch: {
     _title: 'Branches',
     angle: {
+      _title:'branch angle',
       _type:'spread',
-      base:25,
-      spread:8
+      defaultValue: 25,
+      gen: new SpreadGenerator(25),
     }
   },
 }
@@ -81,48 +95,29 @@ const VBox = ({children}) => <div className='vbox'>{children}</div>
 const HBox = ({children}) => <div className='hbox'>{children}</div>
 
 const FixedValueEditor = ({def, update}) => {
-  return <div className='hbox'>
-    <label className='title'>{def._title}</label>
-    <input type='number'
-         value={def.value}
-         onChange={(e)=>{
-           def.value = e.target.value
-           update()
-         }}
-    />
-  </div>
-}
-
-const RandomSpreadEditor = ({def,update}) => {
-  if(def.gen) {
-    return <HBox>
-      <label className='sub'>base</label>
-      <input type='number' value={def.gen.base} onChange={(e) => {
-        def.gen.base = parseFloat(e.target.value)
-        update()
-      }}/>
-      <label className='sub'>spread</label>
-      <input type='number' value={def.gen.spread}
-             onChange={(e)=>{
-               def.gen.spread = parseFloat(e.target.value)
-               update()
-             }}
-      />
-    </HBox>
-  }
   return <HBox>
     <label className='title'>{def._title}</label>
-    <label className='sub'>base</label>
-    <input type='number' value={def.base}
+    <input type='number' value={def.gen.value}
            onChange={(e)=>{
-             def.base = parseFloat(e.target.value)
+             def.gen.value = parseFloat(e.target.value)
              update()
            }}
     />
+  </HBox>
+}
+
+const RandomSpreadEditor = ({def,update}) => {
+  return <HBox>
+    <label className='title'>{def._title}</label>
+    <label className='sub'>base</label>
+    <input type='number' value={def.gen.base} onChange={(e) => {
+      def.gen.base = parseFloat(e.target.value)
+      update()
+    }}/>
     <label className='sub'>spread</label>
-    <input type='number' value={def.spread}
-           onChange={(e)=>{
-             def.spread = parseFloat(e.target.value)
+    <input type='number' value={def.gen.spread}
+           onChange={(e) => {
+             def.gen.spread = parseFloat(e.target.value)
              update()
            }}
     />
@@ -144,22 +139,13 @@ const PickEditor = ({def,update}) => {
 }
 
 function changeGeneratorType(def, targetKey, value) {
-  console.log("changing to",def,targetKey,value)
-  const old = def[targetKey]
   if(value === 'spread') {
-    def[targetKey] = {
-      _title: old._title,
-      _type: 'spread',
-      base:old.value,
-      spread:0,
-    }
+    def[targetKey]._type = 'spread'
+    def[targetKey].gen = new SpreadGenerator(def[targetKey].defaultValue)
   }
   if(value === 'fixed') {
-    def[targetKey] = {
-      _title: old._title,
-      _type: 'fixed',
-      value:old.base,
-    }
+    def[targetKey]._type = 'fixed'
+    def[targetKey].gen = new FixedGenerator(def[targetKey].defaultValue)
   }
 }
 
@@ -256,41 +242,36 @@ class CanvasView extends Component {
     this.ctx.scale(1,-1)
     const seed = xmur3(opts.seed)
     opts.random =sfc32(seed(),seed(),seed(),seed())
-    let width = opts.trunk.width.value
-    let height = opts.trunk.height.value
+    let width = opts.trunk.width.gen.generate(opts.random)
+    let height = opts.trunk.height.gen.generate(opts.random)
 
-    // opts.trunk.color.value = randRange(opts.random,0,1)
-    // opts.leaf.color.value = 1.0-opts.trunk.color.value
-    // if(opts.leaf.color.value < 0) opts.leaf.color.value = opts.leaf.color.value + 1.0
     const o2 = {
       trunkColor: randRange(opts.random,0,1),
     }
     o2.leafColor = 1.0-o2.trunkColor
     if(o2.leafColor < 0) o2.leafColor = o2.leafColor + 1.0
-    this.trunk(this.ctx, width, height, opts.maxDepth.value, opts, o2)
+    this.trunk(this.ctx, width, height, opts.maxDepth.gen.generate(opts.random), opts, o2)
     this.ctx.restore()
 
   }
 
   branch(ctx, w, h,depth, opts,o2) {
-    const angle = toRad(opts.branch.angle.base)
-    const spread = toRad(opts.branch.angle.spread)
     ctx.save()
-    ctx.rotate(randSpread(opts.random,+angle,spread))
+    ctx.rotate(toRad(opts.branch.angle.gen.generate(opts.random)))
     this.trunk(ctx,w,h,depth-1, opts,o2)
     ctx.restore()
     ctx.save()
-    ctx.rotate(randSpread(opts.random,-angle,spread))
+    ctx.rotate(-toRad(opts.branch.angle.gen.generate(opts.random)))
     this.trunk(ctx,w,h,depth-1, opts,o2)
     ctx.restore()
   }
 
   trunk(ctx, w, h, depth, opts, o2) {
-      const nw = w * opts.trunk.attenuation.base
-      const nh = h * randSpread(opts.random,opts.trunk.attenuation.base,opts.trunk.attenuation.spread)
+      const nw = w * opts.trunk.attenuation.defaultValue
+      const nh = h * opts.trunk.attenuation.gen.generate(opts.random)
 
       if(this.phase === PHASES.TRUNK) {
-        const step = 0.5/opts.maxDepth.value
+        const step = 0.5/opts.maxDepth.gen.generate(opts.random)
         ctx.fillStyle = hsvToCanvas(o2.trunkColor,0.8,1.0-depth*step)
         if(opts.trunk.type.value === 'rectangle') {
           ctx.fillRect(-w / 2, 0, w, nh)
@@ -313,16 +294,10 @@ class CanvasView extends Component {
 
   leaf(ctx, w,h, opts,o2) {
     ctx.save()
-    const angle = randSpread(opts.random,opts.leaf.angle.base, opts.leaf.angle.spread)
-    ctx.rotate(toRad(angle))
+    ctx.rotate(toRad(opts.leaf.angle.gen.generate(opts.random)))
     const sat = randSpread(opts.random,0.5,0.2)
     ctx.fillStyle = hsvToCanvas(o2.leafColor,sat,1.0)
-    let s = 0
-    if(opts.leaf.size.gen) {
-      s = opts.leaf.size.gen.generate(opts.random)
-    } else {
-      randSpread(opts.random, opts.leaf.size.base, opts.leaf.size.spread)
-    }
+    let s = opts.leaf.size.gen.generate(opts.random)
     if(s <0) s = 0
 
     if(this.phase !== PHASES.LEAF) {
