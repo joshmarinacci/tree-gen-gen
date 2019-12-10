@@ -31,7 +31,6 @@ let mainDoc = {
     _type:'fixed',
     _title:'max depth',
     defaultValue:4,
-    gen: new FixedGenerator(4),
   },
   trunk: {
     _title: 'Trunk',
@@ -39,13 +38,11 @@ let mainDoc = {
       _type:'fixed',
       _title:'width',
       defaultValue:10,
-      gen: new FixedGenerator(10),
     },
     height: {
       _title:'Height',
       _type:'fixed',
       defaultValue:70,
-      gen: new FixedGenerator(70),
     },
     type: {
       _title:'Shape',
@@ -55,9 +52,8 @@ let mainDoc = {
     },
     attenuation: {
       _title:'Attenuation',
-      _type:'spread',
+      _type:'fixed',
       defaultValue:0.8,
-      gen:new SpreadGenerator(0.8),
     }
   },
   leaf: {
@@ -66,7 +62,6 @@ let mainDoc = {
       _title:'Size',
       _type: 'spread',
       defaultValue:20,
-      gen: new SpreadGenerator(20),
     },
     type: {
       _title:'shape',
@@ -78,7 +73,6 @@ let mainDoc = {
       _title:'Angle',
       _type:'spread',
       defaultValue: 0,
-      gen: new SpreadGenerator(0),
     }
   },
   branch: {
@@ -87,10 +81,34 @@ let mainDoc = {
       _title:'branch angle',
       _type:'spread',
       defaultValue: 25,
-      gen: new SpreadGenerator(25),
     }
   },
 }
+
+function fixup(obj) {
+  // console.log("fixing",mainDoc)
+  if(obj._type) {
+    if(obj._type === 'fixed') {
+      obj.gen = new FixedGenerator(obj.defaultValue)
+    }
+    if(obj._type === 'spread') {
+      obj.gen = new SpreadGenerator(obj.defaultValue)
+    }
+    return
+  }
+
+  const keys = Object.keys(obj);
+  for(let i=0; i<keys.length; i++) {
+    const key = keys[i]
+    if(key === 'seed') continue
+    if(key === 'title') continue
+    if(key === '_title') continue
+    if(key === 'gen') continue
+    fixup(obj[key])
+  }
+}
+
+fixup(mainDoc)
 
 const VBox = ({children}) => <div className='vbox'>{children}</div>
 const HBox = ({children}) => <div className='hbox'>{children}</div>
