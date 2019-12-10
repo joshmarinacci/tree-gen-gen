@@ -25,6 +25,7 @@ class FixedGenerator {
 
 
 let mainDoc = {
+  seed: 'apple',
   title:'a doc',
   maxDepth:{
     _type:'fixed',
@@ -190,6 +191,11 @@ const Group = ({def,update}) => {
 const DocEditor = ({doc,update}) => {
   return <div className='vbox'>
     <h3>{doc.title}</h3>
+    <button onClick={()=>{
+     doc.seed = ""+Math.random()
+      update()
+    }}>Randomize</button>
+
     <FixedValueEditor def={doc.maxDepth}  update={update}/>
     <Group def={doc.trunk} update={update}/>
     <Group def={doc.leaf} update={update}/>
@@ -226,7 +232,6 @@ class CanvasView extends Component {
     //floor
     ctx.fillStyle = '#d0d0d0'
     ctx.fillRect(0,h-10,w,10)
-    this.props.doc.seed = 'apple';//""+Math.random()
 
     // draw the two phases
     this.firstTrunk(PHASES.TRUNK,this.props.doc)
@@ -338,6 +343,7 @@ const App = () => {
     <HBox>
       <DocEditor doc={mainDoc} update={()=> setCount(count+1)}/>
       <CanvasView doc={mainDoc}/>
+
     </HBox>
   );
 }
