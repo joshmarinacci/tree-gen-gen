@@ -3,6 +3,16 @@ import './App.css';
 import {hsvToCanvas, randRange, randSpread, sfc32, toRad, xmur3} from './utils.js'
 
 
+class SpreadGenerator {
+  constructor(base, spread) {
+    this.base = base
+    this.spread = 0
+  }
+  generate(random) {
+    return randSpread(random, this.base, this.spread)
+
+  }
+}
 
 let mainDoc = {
   title:'a doc',
@@ -41,8 +51,8 @@ let mainDoc = {
     size: {
       _title:'Size',
       _type: 'spread',
-      base:20,
-      spread:3
+      defaultValue:20,
+      gen: new SpreadGenerator(20),
     },
     type: {
       _title:'shape',
@@ -84,6 +94,22 @@ const FixedValueEditor = ({def, update}) => {
 }
 
 const RandomSpreadEditor = ({def,update}) => {
+  if(def.gen) {
+    return <HBox>
+      <label className='sub'>base</label>
+      <input type='number' value={def.gen.base} onChange={(e) => {
+        def.gen.base = parseFloat(e.target.value)
+        update()
+      }}/>
+      <label className='sub'>spread</label>
+      <input type='number' value={def.gen.spread}
+             onChange={(e)=>{
+               def.gen.spread = parseFloat(e.target.value)
+               update()
+             }}
+      />
+    </HBox>
+  }
   return <HBox>
     <label className='title'>{def._title}</label>
     <label className='sub'>base</label>
@@ -291,7 +317,12 @@ class CanvasView extends Component {
     ctx.rotate(toRad(angle))
     const sat = randSpread(opts.random,0.5,0.2)
     ctx.fillStyle = hsvToCanvas(o2.leafColor,sat,1.0)
-    let s = randSpread(opts.random,opts.leaf.size.base,opts.leaf.size.spread)
+    let s = 0
+    if(opts.leaf.size.gen) {
+      s = opts.leaf.size.gen.generate(opts.random)
+    } else {
+      randSpread(opts.random, opts.leaf.size.base, opts.leaf.size.spread)
+    }
     if(s <0) s = 0
 
     if(this.phase !== PHASES.LEAF) {
