@@ -6,7 +6,6 @@ export class CanvasView extends Component {
     componentDidMount() {
         this.redraw()
         this.props.saveTrigger.on("save",()=>{
-            console.log("we should save")
             this.props.gallery.add(this.canvas)
             this.props.update()
         })
@@ -79,10 +78,11 @@ export class CanvasView extends Component {
         if (this.phase === PHASES.TRUNK) {
             const step = 0.5 / opts.maxDepth.gen.generate(opts.random)
             ctx.fillStyle = hsvToCanvas(o2.trunkColor, 0.8, 1.0 - depth * step)
-            if (opts.trunk.type.value === 'rectangle') {
+            const type = opts.trunk.type.gen.generate(opts.random)
+            if (type === 'rectangle') {
                 ctx.fillRect(-w / 2, 0, w, nh)
             }
-            if (opts.trunk.type.value === 'trapezoid') {
+            if (type === 'trapezoid') {
                 ctx.beginPath()
                 ctx.moveTo(-w / 2, 0)
                 ctx.lineTo(-nw / 2, nh)

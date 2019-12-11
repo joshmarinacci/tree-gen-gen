@@ -1,78 +1,43 @@
 import React, {useState} from 'react'
 import './App.css'
-import {randSpread} from './utils.js'
 import {CanvasView} from './CanvasView.js'
+import {
+  GENERATOR_TYPES,
+  GENERATOR_LIST,
+  fixup, GENERATOR_MAP
+} from './generators.js'
 
 
-class SpreadGenerator {
-  constructor(base) {
-    this.base = base
-    this.spread = 0
-  }
-  generate(random) {
-    return randSpread(random, this.base, this.spread)
-  }
-}
-
-class FixedGenerator {
-  constructor(defaultValue) {
-    this.value = defaultValue
-  }
-  generate(random) {
-    return this.value
-  }
-}
-
-class FixedPickGenerator {
-  constructor(defaultValue, values) {
-    this.value = defaultValue
-    this.values = values
-  }
-  generate(random) {
-    return this.value
-  }
-}
-
-class RandomPickGenerator {
-  constructor(defaultValue, values) {
-    this.value = defaultValue
-    this.values = values
-  }
-  generate(random) {
-    const n = Math.floor(random()*this.values.length)
-    return this.values[n]
-  }
-}
 
 let mainDoc = {
   seed: 'apple',
   title:'a doc',
   maxDepth:{
-    _type:'fixed',
+    _type:GENERATOR_TYPES.fixed,
     _title:'max depth',
     defaultValue:4,
   },
   trunk: {
     _title: 'Trunk',
     width: {
-      _type:'fixed',
+      _type:GENERATOR_TYPES.fixed,
       _title:'width',
       defaultValue:10,
     },
     height: {
       _title:'Height',
-      _type:'fixed',
+      _type:GENERATOR_TYPES.fixed,
       defaultValue:70,
     },
     type: {
       _title:'Shape',
-      _type:'pick',
-      value:'trapezoid',
+      _type:GENERATOR_TYPES.pick,
+      defaultValue:'trapezoid',
       values:['rectangle','trapezoid']
     },
     attenuation: {
       _title:'Attenuation',
-      _type:'fixed',
+      _type:GENERATOR_TYPES.fixed,
       defaultValue:0.8,
     }
   },
@@ -80,18 +45,18 @@ let mainDoc = {
     _title: 'Leaves',
     size: {
       _title:'Size',
-      _type: 'spread',
+      _type: GENERATOR_TYPES.spread,
       defaultValue:20,
     },
     type: {
       _title:'shape',
-      _type: 'pick',
+      _type: GENERATOR_TYPES.pick,
       defaultValue:'square',
       values:['square','circle','triangle','ellipse'],
     },
     angle: {
       _title:'Angle',
-      _type:'spread',
+      _type:GENERATOR_TYPES.spread,
       defaultValue: 0,
     }
   },
@@ -99,40 +64,12 @@ let mainDoc = {
     _title: 'Branches',
     angle: {
       _title:'branch angle',
-      _type:'spread',
+      _type:GENERATOR_TYPES.spread,
       defaultValue: 25,
     }
   },
 }
 
-function fixup(obj) {
-  // console.log("fixing",mainDoc)
-  if(obj._type) {
-    if(obj._type === 'fixed') {
-      obj.gen = new FixedGenerator(obj.defaultValue)
-    }
-    if(obj._type === 'spread') {
-      obj.gen = new SpreadGenerator(obj.defaultValue)
-    }
-    if(obj._type === 'pick') {
-      obj.gen = new FixedPickGenerator(obj.defaultValue,obj.values)
-    }
-    if(obj._type === 'random-pick') {
-      obj.gen = new RandomPickGenerator(obj.defaultValue,obj.values)
-    }
-    return
-  }
-
-  const keys = Object.keys(obj);
-  for(let i=0; i<keys.length; i++) {
-    const key = keys[i]
-    if(key === 'seed') continue
-    if(key === 'title') continue
-    if(key === '_title') continue
-    if(key === 'gen') continue
-    fixup(obj[key])
-  }
-}
 
 fixup(mainDoc)
 
@@ -187,68 +124,33 @@ const RandomPickEditor = ({def,update}) => {
   </select>
 }
 
-const GENERATOR_TYPES = [
-  {
-    value:'fixed',
-    title:'Fixed',
-  },
-  {
-    value:'spread',
-    title:'Spread',
-  },
-  {
-    value:'pick',
-    title:'Pick One'
-  },
-  {
-    value:'random-pick',
-    title:'Randomly Pick One'
-  }
-]
-
-function changeGeneratorType(def, targetKey, value) {
-  if(value === 'spread') {
-    def[targetKey]._type = 'spread'
-    def[targetKey].gen = new SpreadGenerator(def[targetKey].defaultValue)
-  }
-  if(value === 'fixed') {
-    def[targetKey]._type = 'fixed'
-    def[targetKey].gen = new FixedGenerator(def[targetKey].defaultValue)
-  }
-  if(value === 'pick') {
-    def[targetKey]._type = 'pick'
-    def[targetKey].gen = new FixedPickGenerator(def[targetKey].defaultValue, def[targetKey].values)
-  }
-  if(value === 'random-pick') {
-    def[targetKey]._type = 'random-pick'
-    def[targetKey].gen = new RandomPickGenerator(def[targetKey].defaultValue, def[targetKey].values)
-  }
-}
-
 const TypePicker = ({def, targetKey, update}) => {
   const type = def[targetKey]._type
   return <select value={type} onChange={(e)=>{
-    changeGeneratorType(def,targetKey,e.target.value)
+    const obj = def[targetKey]
+    const cls = GENERATOR_MAP[e.target.value].cls
+    obj._type = e.target.value
+    obj.gen = new cls(obj.defaultValue, obj.values)
     update()
   }}>
-    {GENERATOR_TYPES.map((t => {
-      return <option key={t.value} value={t.value}>{t.title}</option>
+    {GENERATOR_LIST.map((t => {
+      return <option key={t.key} value={t.key}>{t.title}</option>
     }))}
   </select>
 }
 
 const GroupRow = ({parent, def, targetKey, update}) => {
   let ed = ""
-  if(def._type === 'fixed') {
+  if(def._type === GENERATOR_TYPES.fixed) {
     ed = <FixedValueEditor key={targetKey} def={def} update={update}/>
   }
-  if(def._type === 'spread') {
+  if(def._type === GENERATOR_TYPES.spread) {
     ed = <RandomSpreadEditor key={targetKey} def={def} update={update}/>
   }
-  if(def._type === 'pick') {
+  if(def._type === GENERATOR_TYPES.pick) {
     ed = <PickEditor key={targetKey} def={def} update={update}/>
   }
-  if(def._type === 'random-pick') {
+  if(def._type === GENERATOR_TYPES.randomPick) {
     ed = <RandomPickEditor key={targetKey} def={def} update={update}/>
   }
   return <HBox>
@@ -278,7 +180,10 @@ const DocEditor = ({doc,update}) => {
       update()
     }}>Randomize</button>
 
-    <FixedValueEditor def={doc.maxDepth}  update={update}/>
+    <HBox>
+      <label>max depth</label>
+      <FixedValueEditor def={doc.maxDepth}  update={update}/>
+    </HBox>
     <Group def={doc.trunk} update={update}/>
     <Group def={doc.leaf} update={update}/>
     <Group def={doc.branch} update={update}/>
