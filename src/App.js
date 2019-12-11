@@ -11,7 +11,6 @@ class SpreadGenerator {
   }
   generate(random) {
     return randSpread(random, this.base, this.spread)
-
   }
 }
 
@@ -24,6 +23,26 @@ class FixedGenerator {
   }
 }
 
+class FixedPickGenerator {
+  constructor(defaultValue, values) {
+    this.value = defaultValue
+    this.values = values
+  }
+  generate(random) {
+    return this.value
+  }
+}
+
+class RandomPickGenerator {
+  constructor(defaultValue, values) {
+    this.value = defaultValue
+    this.values = values
+  }
+  generate(random) {
+    const n = Math.floor(random()*this.values.length)
+    return this.values[n]
+  }
+}
 
 let mainDoc = {
   seed: 'apple',
@@ -67,7 +86,7 @@ let mainDoc = {
     type: {
       _title:'shape',
       _type: 'pick',
-      value:'square',
+      defaultValue:'square',
       values:['square','circle','triangle','ellipse'],
     },
     angle: {
@@ -94,6 +113,12 @@ function fixup(obj) {
     }
     if(obj._type === 'spread') {
       obj.gen = new SpreadGenerator(obj.defaultValue)
+    }
+    if(obj._type === 'pick') {
+      obj.gen = new FixedPickGenerator(obj.defaultValue,obj.values)
+    }
+    if(obj._type === 'random-pick') {
+      obj.gen = new RandomPickGenerator(obj.defaultValue,obj.values)
     }
     return
   }
@@ -142,28 +167,46 @@ const RandomSpreadEditor = ({def,update}) => {
 
 const PickEditor = ({def,update}) => {
   return <select value={def.value} onChange={(e)=>{
-      def.value = e.target.value
-      update()
-    }}>
-      {def.values.map(val => {
-        return <option value={val} key={val}>{val}</option>
-      })}
-    </select>
+    def.gen.value = e.target.value
+    update()
+  }}>
+    {def.values.map(val => {
+      return <option value={val} key={val}>{val}</option>
+    })}
+  </select>
+}
+
+const RandomPickEditor = ({def,update}) => {
+  return <select value={def.value} onChange={(e)=>{
+    def.gen.value = e.target.value
+    update()
+  }}>
+    {def.values.map(val => {
+      return <option value={val} key={val}>{val}</option>
+    })}
+  </select>
 }
 
 const GENERATOR_TYPES = [
   {
     value:'fixed',
-    title:'F',
+    title:'Fixed',
   },
   {
     value:'spread',
-    title:'S',
+    title:'Spread',
   },
+  {
+    value:'pick',
+    title:'Pick One'
+  },
+  {
+    value:'random-pick',
+    title:'Randomly Pick One'
+  }
 ]
 
 function changeGeneratorType(def, targetKey, value) {
-  console.log('changing to',value)
   if(value === 'spread') {
     def[targetKey]._type = 'spread'
     def[targetKey].gen = new SpreadGenerator(def[targetKey].defaultValue)
@@ -171,6 +214,14 @@ function changeGeneratorType(def, targetKey, value) {
   if(value === 'fixed') {
     def[targetKey]._type = 'fixed'
     def[targetKey].gen = new FixedGenerator(def[targetKey].defaultValue)
+  }
+  if(value === 'pick') {
+    def[targetKey]._type = 'pick'
+    def[targetKey].gen = new FixedPickGenerator(def[targetKey].defaultValue, def[targetKey].values)
+  }
+  if(value === 'random-pick') {
+    def[targetKey]._type = 'random-pick'
+    def[targetKey].gen = new RandomPickGenerator(def[targetKey].defaultValue, def[targetKey].values)
   }
 }
 
@@ -197,6 +248,9 @@ const GroupRow = ({parent, def, targetKey, update}) => {
   if(def._type === 'pick') {
     ed = <PickEditor key={targetKey} def={def} update={update}/>
   }
+  if(def._type === 'random-pick') {
+    ed = <RandomPickEditor key={targetKey} def={def} update={update}/>
+  }
   return <HBox>
     <label>{def._title}</label>
     <TypePicker def={parent} targetKey={targetKey} update={update}/>
@@ -209,28 +263,7 @@ const Group = ({def,update}) => {
     if(key.startsWith('_')) return
     const ch = def[key]
     if(!ch._type) return
-
     chs.push(<GroupRow key={key} parent={def} def={ch} targetKey={key} update={update}/>)
-    return
-    // if(ch._type === 'fixed')  {
-    //   const ed = <FixedValueEditor key={key} def={ch} update={update}/>
-    //   const wrapper = <HBox key={key}>{title}{typePicker}{ed}</HBox>
-    //   chs.push(wrapper)
-    //   return
-    // }
-    //
-    // if(ch._type === 'spread')  {
-    //   const ed = <RandomSpreadEditor key={key} def={ch} update={update}/>
-    //   const wrapper = <HBox key={key}>{title}{typePicker}{ed}</HBox>
-    //   chs.push(wrapper)
-    //   return
-    // }
-    // if(ch._type === 'pick')  {
-    //   const ed = <PickEditor key={key} def={ch} update={update}/>
-    //   const wrapper = <HBox key={key}>{title}{typePicker}{ed}</HBox>
-    //   chs.push(wrapper)
-    //   return
-    // }
   })
   return <VBox>
     <b>{def._title}</b>

@@ -17,7 +17,8 @@ export class CanvasView extends Component {
     }
 
     render() {
-        return <canvas ref={(canvas) => this.canvas = canvas} width={300} height={300}/>
+        return <canvas ref={(canvas) => this.canvas = canvas}
+                       width={400} height={400}/>
     }
 
     redraw() {
@@ -108,15 +109,16 @@ export class CanvasView extends Component {
         if (this.phase !== PHASES.LEAF) {
             return ctx.restore()
         }
-        if (opts.leaf.type.value === 'square') {
+        const type = opts.leaf.type.gen.generate(opts.random)
+        if (type === 'square') {
             ctx.fillRect(-s, -s, s * 2, s * 2)
         }
-        if (opts.leaf.type.value === 'circle') {
+        if (type === 'circle') {
             ctx.beginPath()
             ctx.arc(0, 0, s, 0, toRad(360))
             ctx.fill()
         }
-        if (opts.leaf.type.value === 'triangle') {
+        if (type === 'triangle') {
             ctx.beginPath()
             for (let i = 0; i <= 3; i++) {
                 let theta = toRad(360 / 3 * i)
@@ -127,7 +129,7 @@ export class CanvasView extends Component {
             }
             ctx.fill()
         }
-        if (opts.leaf.type.value === 'ellipse') {
+        if (type === 'ellipse') {
             ctx.beginPath()
             ctx.ellipse(0, 0, s, s / 2, 0, 0, toRad(360))
             ctx.fill()
