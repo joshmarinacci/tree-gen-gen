@@ -115,20 +115,16 @@ const VBox = ({children}) => <div className='vbox'>{children}</div>
 const HBox = ({children}) => <div className='hbox'>{children}</div>
 
 const FixedValueEditor = ({def, update}) => {
-  return <HBox>
-    <label className='title'>{def._title}</label>
-    <input type='number' value={def.gen.value}
+  return <input type='number' value={def.gen.value}
            onChange={(e)=>{
              def.gen.value = parseFloat(e.target.value)
              update()
            }}
     />
-  </HBox>
 }
 
 const RandomSpreadEditor = ({def,update}) => {
   return <HBox>
-    <label className='title'>{def._title}</label>
     <label className='sub'>base</label>
     <input type='number' value={def.gen.base} onChange={(e) => {
       def.gen.base = parseFloat(e.target.value)
@@ -145,9 +141,7 @@ const RandomSpreadEditor = ({def,update}) => {
 }
 
 const PickEditor = ({def,update}) => {
-  return <HBox>
-    <label className='title'>{def._title}</label>
-    <select value={def.value} onChange={(e)=>{
+  return <select value={def.value} onChange={(e)=>{
       def.value = e.target.value
       update()
     }}>
@@ -155,10 +149,21 @@ const PickEditor = ({def,update}) => {
         return <option value={val} key={val}>{val}</option>
       })}
     </select>
-  </HBox>
 }
 
+const GENERATOR_TYPES = [
+  {
+    value:'fixed',
+    title:'F',
+  },
+  {
+    value:'spread',
+    title:'S',
+  },
+]
+
 function changeGeneratorType(def, targetKey, value) {
+  console.log('changing to',value)
   if(value === 'spread') {
     def[targetKey]._type = 'spread'
     def[targetKey].gen = new SpreadGenerator(def[targetKey].defaultValue)
@@ -175,32 +180,57 @@ const TypePicker = ({def, targetKey, update}) => {
     changeGeneratorType(def,targetKey,e.target.value)
     update()
   }}>
-    <option>fixed</option>
-    <option>spread</option>
+    {GENERATOR_TYPES.map((t => {
+      return <option key={t.value} value={t.value}>{t.title}</option>
+    }))}
   </select>
 }
 
+const GroupRow = ({parent, def, targetKey, update}) => {
+  let ed = ""
+  if(def._type === 'fixed') {
+    ed = <FixedValueEditor key={targetKey} def={def} update={update}/>
+  }
+  if(def._type === 'spread') {
+    ed = <RandomSpreadEditor key={targetKey} def={def} update={update}/>
+  }
+  if(def._type === 'pick') {
+    ed = <PickEditor key={targetKey} def={def} update={update}/>
+  }
+  return <HBox>
+    <label>{def._title}</label>
+    <TypePicker def={parent} targetKey={targetKey} update={update}/>
+    {ed}
+  </HBox>
+}
 const Group = ({def,update}) => {
   const chs = []
   Object.keys(def).forEach((key,i)=>{
     if(key.startsWith('_')) return
     const ch = def[key]
     if(!ch._type) return
-    if(ch._type === 'fixed')  {
-      const ed = <FixedValueEditor key={key} def={ch} update={update}/>
-      const typePicker = <TypePicker def={def} targetKey={key} update={update}/>
-      const wrapper = <HBox key={key}>{typePicker}{ed}</HBox>
-      chs.push(wrapper)
-      return
-    }
-    if(ch._type === 'spread')  {
-      const ed = <RandomSpreadEditor key={key} def={ch} update={update}/>
-      const typePicker = <TypePicker def={def} targetKey={key} update={update}/>
-      const wrapper = <HBox key={key}>{typePicker}{ed}</HBox>
-      chs.push(wrapper)
-      return
-    }
-    if(ch._type === 'pick')  return chs.push(<PickEditor key={key} def={ch} update={update}/>)
+
+    chs.push(<GroupRow key={key} parent={def} def={ch} targetKey={key} update={update}/>)
+    return
+    // if(ch._type === 'fixed')  {
+    //   const ed = <FixedValueEditor key={key} def={ch} update={update}/>
+    //   const wrapper = <HBox key={key}>{title}{typePicker}{ed}</HBox>
+    //   chs.push(wrapper)
+    //   return
+    // }
+    //
+    // if(ch._type === 'spread')  {
+    //   const ed = <RandomSpreadEditor key={key} def={ch} update={update}/>
+    //   const wrapper = <HBox key={key}>{title}{typePicker}{ed}</HBox>
+    //   chs.push(wrapper)
+    //   return
+    // }
+    // if(ch._type === 'pick')  {
+    //   const ed = <PickEditor key={key} def={ch} update={update}/>
+    //   const wrapper = <HBox key={key}>{title}{typePicker}{ed}</HBox>
+    //   chs.push(wrapper)
+    //   return
+    // }
   })
   return <VBox>
     <b>{def._title}</b>
