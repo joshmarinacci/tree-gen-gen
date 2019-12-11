@@ -25,3 +25,14 @@ label.sub {
     font-variant: small-caps;
     padding-right: 0.25rem;
 }
+
+
+.gallery {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    list-style: none;
+}
+.gallery li {
+    margin: 0.5rem;
+}
