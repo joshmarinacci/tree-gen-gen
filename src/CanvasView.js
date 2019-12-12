@@ -33,9 +33,15 @@ export class CanvasView extends Component {
         ctx.fillStyle = '#d0d0d0'
         ctx.fillRect(0, h - 10, w, 10)
 
-        // draw the two phases
-        this.firstTrunk(PHASES.TRUNK, this.props.doc)
-        this.firstTrunk(PHASES.LEAF, this.props.doc)
+
+        if(this.props.doc.algorithm === 'tree') {
+            // draw the two phases
+            this.firstTrunk(PHASES.TRUNK, this.props.doc)
+            this.firstTrunk(PHASES.LEAF, this.props.doc)
+        }
+        if(this.props.doc.algorithm === 'mountain') {
+            console.log("doing the mountain")
+        }
     }
 
     firstTrunk(phase, opts) {

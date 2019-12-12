@@ -87,6 +87,7 @@ export function fixup(obj) {
         const key = keys[i]
         if(key === 'seed') continue
         if(key === 'title') continue
+        if(key === 'algorithm') continue
         if(key === '_title') continue
         if(key === 'gen') continue
         fixup(obj[key])

@@ -14,6 +14,7 @@ function setupTreeDoc() {
   console.log("setting up the tree doc")
 
   let doc = {
+    algorithm:'tree',
     seed: 'apple',
     title: 'a doc',
     maxDepth: {
@@ -78,7 +79,10 @@ function setupTreeDoc() {
 }
 
 function setupMountainDoc() {
-  const doc = {}
+  const doc = {
+    algorithm: 'mountain',
+    title:'a mountain'
+  }
   fixup(doc)
   mainDoc.trigger(doc)
 }
@@ -185,6 +189,7 @@ const Group = ({def,update}) => {
 const DocEditor = ({doc,update}) => {
   const children = Object.keys(doc).map(key => {
     if(key === 'title') return <h3 key={key}>{doc.title}</h3>
+    if(key === 'algorithm') return ""
     if(key === 'seed') return ""
     if(key === 'maxDepth') return <HBox key={key}>
             <label>max depth</label>
