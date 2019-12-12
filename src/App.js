@@ -183,21 +183,23 @@ const Group = ({def,update}) => {
   </VBox>
 }
 const DocEditor = ({doc,update}) => {
-  return <div className='vbox'>
-    <h3>{doc.title}</h3>
+  const children = Object.keys(doc).map(key => {
+    if(key === 'title') return <h3 key={key}>{doc.title}</h3>
+    if(key === 'seed') return ""
+    if(key === 'maxDepth') return <HBox key={key}>
+            <label>max depth</label>
+            <FixedValueEditor def={doc.maxDepth}  update={update}/>
+          </HBox>
+    return <Group key={key} def={doc[key]} update={update}/>
+  })
+
+  return <VBox>
     <button onClick={()=>{
      doc.seed = ""+Math.random()
       update()
     }}>Randomize</button>
-
-    <HBox>
-      <label>max depth</label>
-      <FixedValueEditor def={doc.maxDepth}  update={update}/>
-    </HBox>
-    <Group def={doc.trunk} update={update}/>
-    <Group def={doc.leaf} update={update}/>
-    <Group def={doc.branch} update={update}/>
-  </div>
+    {children}
+  </VBox>
 }
 
 class CanvasGallery {
