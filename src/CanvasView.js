@@ -2,6 +2,11 @@ import React, {Component} from 'react'
 import {hsvToCanvas, randRange, randSpread, sfc32, toRad, xmur3} from './utils.js'
 import {PHASES} from './common.js'
 
+//converts h,s,l in the range 0-1 into proper css format
+function hsl(hue, s, l) {
+    return `hsl(${hue*360}deg,${s*100}%,${l*100}%)`
+}
+
 export class CanvasView extends Component {
     componentDidMount() {
         this.redraw()
@@ -41,6 +46,7 @@ export class CanvasView extends Component {
         }
         if(this.props.doc.algorithm === 'mountain') {
             console.log("doing the mountain")
+            this.drawMountain(this.props.doc)
         }
     }
 
@@ -143,4 +149,34 @@ export class CanvasView extends Component {
         ctx.restore()
     }
 
+    drawMountain(opts) {
+        const seed = xmur3(opts.seed)
+        opts.random = sfc32(seed(), seed(), seed(), seed())
+        const w = this.canvas.width
+        const h = this.canvas.height
+        this.ctx.save()
+        this.ctx.translate(w / 2, h - 10)
+        this.ctx.scale(1, -1)
+        const rows = opts.main.rows.gen.generate(opts.random)
+        let hue = opts.main.hue.gen.generate(opts.random)
+        const ctx = this.ctx
+        let rowsize = h/rows
+        for(let i=0; i< rows; i++) {
+            const length = opts.main.length.gen.generate(opts.random)
+            let step = w/length
+            let rowStep = 1.0/rows*i
+            ctx.fillStyle = hsl(hue,rowStep,rowStep)
+            ctx.beginPath()
+            const y = h-(i+1)*rowsize
+            ctx.moveTo(-w/2,y)
+            for(let j=0; j<length; j++) {
+                let peakHeight = opts.main.peakHeight.gen.generate(opts.random)
+                ctx.lineTo(j*step-w/2,y+peakHeight)
+            }
+            ctx.lineTo(w/2,y+rowsize)
+            ctx.lineTo(w/2,y)
+            ctx.fill()
+        }
+        this.ctx.restore()
+    }
 }

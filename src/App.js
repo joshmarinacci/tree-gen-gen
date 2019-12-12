@@ -81,7 +81,29 @@ function setupTreeDoc() {
 function setupMountainDoc() {
   const doc = {
     algorithm: 'mountain',
-    title:'a mountain'
+    title:'a mountain',
+    main: {
+      rows: {
+        _type: GENERATOR_TYPES.fixed,
+        _title: 'row',
+        defaultValue: 4,
+      },
+      hue: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'hue',
+        defaultValue: 0.0,
+      },
+      length: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'length',
+        defaultValue: 30,
+      },
+      peakHeight: {
+        _type: GENERATOR_TYPES.spread,
+        _title:'peak height',
+        defaultValue: 100,
+      }
+    }
   }
   fixup(doc)
   mainDoc.trigger(doc)
@@ -256,7 +278,8 @@ const Gallery = ({gallery})=>{
   </ul>
 }
 
-setupTreeDoc()
+// setupTreeDoc()
+setupMountainDoc()
 
 
 const App = () => {
