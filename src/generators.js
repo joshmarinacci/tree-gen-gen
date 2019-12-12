@@ -40,12 +40,23 @@ export class RandomPickGenerator {
     }
 }
 
+export class RangeGenerator {
+    constructor(min,max) {
+        this.min = min
+        this.max = max
+    }
+    generate(random) {
+        return this.min + random()*(this.max-this.min)
+    }
+}
+
 
 export const GENERATOR_TYPES = {
     fixed: 'fixed',
     spread:'spread',
     pick:'pick',
-    randomPick: 'randomPick'
+    randomPick: 'randomPick',
+    range:'range',
 
 }
 export const GENERATOR_LIST = [
@@ -68,6 +79,11 @@ export const GENERATOR_LIST = [
         cls:RandomPickGenerator,
         title:'Pick One Randomly',
         key:GENERATOR_TYPES.randomPick
+    },
+    {
+        cls:RangeGenerator,
+        title:'Within Range',
+        key:GENERATOR_TYPES.range
     }
 ]
 

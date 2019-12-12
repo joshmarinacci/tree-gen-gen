@@ -99,9 +99,10 @@ function setupMountainDoc() {
         defaultValue: 30,
       },
       peakHeight: {
-        _type: GENERATOR_TYPES.spread,
+        _type: GENERATOR_TYPES.range,
         _title:'peak height',
         defaultValue: 100,
+        values:120,
       }
     }
   }
@@ -132,6 +133,23 @@ const RandomSpreadEditor = ({def,update}) => {
     <input type='number' value={def.gen.spread}
            onChange={(e) => {
              def.gen.spread = parseFloat(e.target.value)
+             update()
+           }}
+    />
+  </HBox>
+}
+
+const RangeEditor = ({def,update}) => {
+  return <HBox>
+    <label className='sub'>min</label>
+    <input type='number' value={def.gen.min} onChange={(e) => {
+      def.gen.min = parseFloat(e.target.value)
+      update()
+    }}/>
+    <label className='sub'>max</label>
+    <input type='number' value={def.gen.max}
+           onChange={(e) => {
+             def.gen.max = parseFloat(e.target.value)
              update()
            }}
     />
@@ -188,6 +206,9 @@ const GroupRow = ({parent, def, targetKey, update}) => {
   }
   if(def._type === GENERATOR_TYPES.randomPick) {
     ed = <RandomPickEditor key={targetKey} def={def} update={update}/>
+  }
+  if(def._type === GENERATOR_TYPES.range) {
+    ed = <RangeEditor key={targetKey} def={def} update={update}/>
   }
   return <HBox>
     <label>{def._title}</label>
