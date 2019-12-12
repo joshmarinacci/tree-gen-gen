@@ -214,7 +214,36 @@ class CanvasGallery {
 
 
 const saver = new Observable()
+const exporter = new Observable()
 const gallery = new CanvasGallery()
+
+exporter.on("click",()=>{
+  // console.log("exporting",gallery.data)
+  const canvas = document.createElement('canvas')
+  const dim = 400
+  const w = gallery.data.length*dim
+  const h = dim
+  canvas.width = w
+  canvas.height = h
+  console.log("exporting",w,h)
+  const ctx = canvas.getContext('2d')
+  ctx.fillStyle = 'red'
+  ctx.fillRect(0,0,w,h)
+  gallery.data.forEach((url,i) => {
+    const img = new Image()
+    img.src = url
+    ctx.drawImage(img,i*dim,0)
+  })
+  let url = canvas.toDataURL()
+  // url = url.replace(/^data:image\/png/,'data:application/octet-stream');
+  console.log(url)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'gallery.png'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+})
 
 const Gallery = ({gallery})=>{
   return <ul className='gallery'>
@@ -233,6 +262,7 @@ const App = () => {
           <DocEditor doc={mainDoc} update={forceUpdate}/>
           <CanvasView doc={mainDoc} saveTrigger={saver} gallery={gallery} update={forceUpdate}/>
           <button onClick={saver.trigger}>save</button>
+          <button onClick={exporter.trigger}>export gallery</button>
         </HBox>
         <Gallery gallery={gallery}/>
       </VBox>
