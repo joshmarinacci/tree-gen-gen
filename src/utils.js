@@ -74,6 +74,9 @@ export class Observable {
     on(type,cb) {
         this.callbacks.push(cb)
     }
+    off(type,cb) {
+        this.callbacks = this.callbacks.filter(n => n !== cb)
+    }
     trigger = (e) => {
         this.data = e
         this.callbacks.forEach(cb => cb(e))

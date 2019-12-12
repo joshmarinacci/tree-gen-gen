@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import './App.css'
 import {CanvasView} from './CanvasView.js'
 import {
@@ -255,6 +255,13 @@ setupTreeDoc()
 const App = () => {
   const [count, setCount] = useState(0)
   const [doc, setDoc] = useState(mainDoc.getData())
+  useEffect(() => {
+    const handler = () => {
+      setDoc(mainDoc.getData(0))
+    }
+    mainDoc.on('change',handler)
+    return () => mainDoc.off('change',handler)
+  })
   const forceUpdate = ()=>setCount(count+1)
   return (
       <VBox>
