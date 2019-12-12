@@ -65,3 +65,20 @@ export function hsvToCanvas(h, s, v) {
 }
 
 
+
+export class Observable {
+    constructor(data) {
+        this.callbacks = []
+        this.data = data
+    }
+    on(type,cb) {
+        this.callbacks.push(cb)
+    }
+    trigger = (e) => {
+        this.data = e
+        this.callbacks.forEach(cb => cb(e))
+    }
+    getData() {
+        return this.data
+    }
+}

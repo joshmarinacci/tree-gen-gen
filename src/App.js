@@ -6,72 +6,82 @@ import {
   GENERATOR_LIST,
   fixup, GENERATOR_MAP
 } from './generators.js'
+import {Observable} from './utils.js'
 
+const mainDoc = new Observable()
 
+function setupTreeDoc() {
+  console.log("setting up the tree doc")
 
-let mainDoc = {
-  seed: 'apple',
-  title:'a doc',
-  maxDepth:{
-    _type:GENERATOR_TYPES.fixed,
-    _title:'max depth',
-    defaultValue:4,
-  },
-  trunk: {
-    _title: 'Trunk',
-    width: {
-      _type:GENERATOR_TYPES.fixed,
-      _title:'width',
-      defaultValue:10,
+  let doc = {
+    seed: 'apple',
+    title: 'a doc',
+    maxDepth: {
+      _type: GENERATOR_TYPES.fixed,
+      _title: 'max depth',
+      defaultValue: 4,
     },
-    height: {
-      _title:'Height',
-      _type:GENERATOR_TYPES.fixed,
-      defaultValue:70,
+    trunk: {
+      _title: 'Trunk',
+      width: {
+        _type: GENERATOR_TYPES.fixed,
+        _title: 'width',
+        defaultValue: 10,
+      },
+      height: {
+        _title: 'Height',
+        _type: GENERATOR_TYPES.fixed,
+        defaultValue: 70,
+      },
+      type: {
+        _title: 'Shape',
+        _type: GENERATOR_TYPES.pick,
+        defaultValue: 'trapezoid',
+        values: ['rectangle', 'trapezoid']
+      },
+      attenuation: {
+        _title: 'Attenuation',
+        _type: GENERATOR_TYPES.fixed,
+        defaultValue: 0.8,
+      }
     },
-    type: {
-      _title:'Shape',
-      _type:GENERATOR_TYPES.pick,
-      defaultValue:'trapezoid',
-      values:['rectangle','trapezoid']
+    leaf: {
+      _title: 'Leaves',
+      size: {
+        _title: 'Size',
+        _type: GENERATOR_TYPES.spread,
+        defaultValue: 20,
+      },
+      type: {
+        _title: 'shape',
+        _type: GENERATOR_TYPES.pick,
+        defaultValue: 'square',
+        values: ['square', 'circle', 'triangle', 'ellipse'],
+      },
+      angle: {
+        _title: 'Angle',
+        _type: GENERATOR_TYPES.spread,
+        defaultValue: 0,
+      }
     },
-    attenuation: {
-      _title:'Attenuation',
-      _type:GENERATOR_TYPES.fixed,
-      defaultValue:0.8,
-    }
-  },
-  leaf: {
-    _title: 'Leaves',
-    size: {
-      _title:'Size',
-      _type: GENERATOR_TYPES.spread,
-      defaultValue:20,
+    branch: {
+      _title: 'Branches',
+      angle: {
+        _title: 'branch angle',
+        _type: GENERATOR_TYPES.spread,
+        defaultValue: 25,
+      }
     },
-    type: {
-      _title:'shape',
-      _type: GENERATOR_TYPES.pick,
-      defaultValue:'square',
-      values:['square','circle','triangle','ellipse'],
-    },
-    angle: {
-      _title:'Angle',
-      _type:GENERATOR_TYPES.spread,
-      defaultValue: 0,
-    }
-  },
-  branch: {
-    _title: 'Branches',
-    angle: {
-      _title:'branch angle',
-      _type:GENERATOR_TYPES.spread,
-      defaultValue: 25,
-    }
-  },
+  }
+  fixup(doc)
+  mainDoc.trigger(doc)
 }
 
-
-fixup(mainDoc)
+function setupMountainDoc() {
+  const doc = {}
+  fixup(doc)
+  mainDoc.trigger(doc)
+}
 
 const VBox = ({children}) => <div className='vbox'>{children}</div>
 const HBox = ({children}) => <div className='hbox'>{children}</div>
@@ -190,19 +200,6 @@ const DocEditor = ({doc,update}) => {
   </div>
 }
 
-class Observable {
-  constructor(data) {
-    this.callbacks = []
-    this.data = data
-  }
-  on(type,cb) {
-    this.callbacks.push(cb)
-  }
-  trigger = (e) => {
-    this.callbacks.forEach(cb => cb(e))
-  }
-}
-
 class CanvasGallery {
   constructor() {
     this.data = []
@@ -211,7 +208,6 @@ class CanvasGallery {
     this.data.push(canvas.toDataURL())
   }
 }
-
 
 const saver = new Observable()
 const exporter = new Observable()
@@ -253,16 +249,24 @@ const Gallery = ({gallery})=>{
   </ul>
 }
 
+setupTreeDoc()
+
+
 const App = () => {
   const [count, setCount] = useState(0)
+  const [doc, setDoc] = useState(mainDoc.getData())
   const forceUpdate = ()=>setCount(count+1)
   return (
       <VBox>
         <HBox>
-          <DocEditor doc={mainDoc} update={forceUpdate}/>
-          <CanvasView doc={mainDoc} saveTrigger={saver} gallery={gallery} update={forceUpdate}/>
+          <button onClick={setupTreeDoc}>tree</button>
+          <button onClick={setupMountainDoc}>mountains</button>
           <button onClick={saver.trigger}>save</button>
           <button onClick={exporter.trigger}>export gallery</button>
+        </HBox>
+        <HBox>
+          <DocEditor doc={doc} update={forceUpdate}/>
+          <CanvasView doc={doc} saveTrigger={saver} gallery={gallery} update={forceUpdate}/>
         </HBox>
         <Gallery gallery={gallery}/>
       </VBox>
