@@ -110,6 +110,58 @@ function setupMountainDoc() {
   mainDoc.trigger(doc)
 }
 
+function setupPosition2DDoc() {
+  const doc = {
+    algorithm: 'position2d',
+    title:'a mountain',
+    main: {
+      count: {
+        _type: GENERATOR_TYPES.fixed,
+        _title: 'count',
+        defaultValue: 4,
+      },
+      shape: {
+        _title: 'Shape',
+        _type: GENERATOR_TYPES.pick,
+        defaultValue: 'rectangle',
+        values: ['rectangle', 'circle']
+      },
+      x: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'x',
+        defaultValue: 0.0,
+      },
+      y: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'y',
+        defaultValue: 0.0,
+      },
+      size: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'size',
+        defaultValue: 10.0,
+      },
+      hue: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'hue',
+        defaultValue: 180,
+      },
+      saturation: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'saturation',
+        defaultValue: 100,
+      },
+      lightness: {
+        _type: GENERATOR_TYPES.fixed,
+        _title:'lightness',
+        defaultValue: 50,
+      },
+    }
+  }
+  fixup(doc)
+  mainDoc.trigger(doc)
+}
+
 const VBox = ({children}) => <div className='vbox'>{children}</div>
 const HBox = ({children}) => <div className='hbox'>{children}</div>
 
@@ -300,8 +352,8 @@ const Gallery = ({gallery})=>{
 }
 
 // setupTreeDoc()
-setupMountainDoc()
-
+// setupMountainDoc()
+setupPosition2DDoc()
 
 const App = () => {
   const [count, setCount] = useState(0)

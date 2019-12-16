@@ -48,6 +48,10 @@ export class CanvasView extends Component {
             console.log("doing the mountain")
             this.drawMountain(this.props.doc)
         }
+        if(this.props.doc.algorithm === 'position2d') {
+            console.log("doing position")
+            this.drawPosition(this.props.doc)
+        }
     }
 
     firstTrunk(phase, opts) {
@@ -176,6 +180,40 @@ export class CanvasView extends Component {
             ctx.lineTo(w/2,y+rowsize)
             ctx.lineTo(w/2,y)
             ctx.fill()
+        }
+        this.ctx.restore()
+    }
+
+    drawPosition(opts) {
+        const seed = xmur3(opts.seed)
+        opts.random = sfc32(seed(), seed(), seed(), seed())
+        const w = this.canvas.width
+        const h = this.canvas.height
+        this.ctx.save()
+        this.ctx.translate(w / 2, h/2)
+        this.ctx.scale(1, -1)
+
+        this.ctx.fillStyle = 'red'
+        const count = opts.main.count.gen.generate(opts.random)
+        for(let i=0; i<count; i++) {
+            let shape = opts.main.shape.gen.generate(opts.random)
+            let x = opts.main.x.gen.generate(opts.random)
+            let y = opts.main.y.gen.generate(opts.random)
+            let size = opts.main.size.gen.generate(opts.random)
+            let hue = opts.main.hue.gen.generate(opts.random)
+            let sat = opts.main.saturation.gen.generate(opts.random)
+            let light = opts.main.lightness.gen.generate(opts.random)
+            this.ctx.fillStyle = `hsl(${hue},${sat}%,${light}%)`
+            if(shape === 'rectangle') {
+                this.ctx.fillRect(x,y,size,size)
+            }
+            if(shape === 'circle') {
+                if(size >0) {
+                    this.ctx.beginPath()
+                    this.ctx.arc(x, y, size, 0, Math.PI * 2)
+                    this.ctx.fill()
+                }
+            }
         }
         this.ctx.restore()
     }
