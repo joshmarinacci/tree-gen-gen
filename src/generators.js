@@ -1,9 +1,11 @@
 import {randSpread} from './utils.js'
 
 export class SpreadGenerator {
-    constructor(base) {
+    constructor(base,_skip,obj) {
         this.base = base
         this.spread = 0
+        if(obj && 'base' in obj) this.base = obj.base
+        if(obj && 'spread' in obj) this.spread = obj.spread
     }
     generate(random) {
         return randSpread(random, this.base, this.spread)
@@ -11,8 +13,9 @@ export class SpreadGenerator {
 }
 
 export class FixedGenerator {
-    constructor(defaultValue) {
+    constructor(defaultValue,_skip,obj) {
         this.value = defaultValue
+        if(obj && 'value' in obj) this.value = obj.value
     }
     generate(random) {
         return this.value
@@ -20,9 +23,10 @@ export class FixedGenerator {
 }
 
 export class FixedPickGenerator {
-    constructor(defaultValue, values) {
+    constructor(defaultValue, values,obj) {
         this.value = defaultValue
         this.values = values
+        if(obj && 'value' in obj) this.value = obj.value
     }
     generate(random) {
         return this.value
@@ -30,9 +34,10 @@ export class FixedPickGenerator {
 }
 
 export class RandomPickGenerator {
-    constructor(defaultValue, values) {
+    constructor(defaultValue, values, obj) {
         this.value = defaultValue
         this.values = values
+        if(obj && 'value' in obj) this.value = obj.value
     }
     generate(random) {
         const n = Math.floor(random()*this.values.length)
@@ -41,9 +46,11 @@ export class RandomPickGenerator {
 }
 
 export class RangeGenerator {
-    constructor(min,max) {
+    constructor(min,max,obj) {
         this.min = min
         this.max = max
+        if(obj && 'min' in obj) this.min = obj.min
+        if(obj && 'max' in obj) this.max = obj.max
     }
     generate(random) {
         return this.min + random()*(this.max-this.min)
@@ -94,7 +101,7 @@ GENERATOR_LIST.forEach(el => GENERATOR_MAP[el.key] = el)
 export function fixup(obj) {
     if(obj._type) {
         const cls = GENERATOR_MAP[obj._type].cls
-        obj.gen = new cls(obj.defaultValue, obj.values)
+        obj.gen = new cls(obj.defaultValue, obj.values,obj)
         return
     }
 

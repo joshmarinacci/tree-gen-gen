@@ -85,4 +85,8 @@ export class Observable {
     getData() {
         return this.data
     }
+    setData(data) {
+        this.data = data
+        console.log("updating data without triggering listeners")
+    }
 }

@@ -8,7 +8,7 @@ import {
 } from './generators.js'
 import {Observable} from './utils.js'
 
-const mainDoc = new Observable()
+let mainDoc = new Observable()
 
 function setupTreeDoc() {
   console.log("setting up the tree doc")
@@ -112,6 +112,7 @@ function setupMountainDoc() {
 
 function setupPosition2DDoc() {
   const doc = {
+    version:1,
     algorithm: 'position2d',
     title:'a mountain',
     main: {
@@ -169,6 +170,7 @@ const FixedValueEditor = ({def, update}) => {
   return <input type='number' value={def.gen.value}
            onChange={(e)=>{
              def.gen.value = parseFloat(e.target.value)
+             def.value = def.gen.value
              update()
            }}
     />
@@ -179,12 +181,14 @@ const RandomSpreadEditor = ({def,update}) => {
     <label className='sub'>base</label>
     <input type='number' value={def.gen.base} onChange={(e) => {
       def.gen.base = parseFloat(e.target.value)
+      def.base = def.gen.base
       update()
     }}/>
     <label className='sub'>spread</label>
     <input type='number' value={def.gen.spread}
            onChange={(e) => {
              def.gen.spread = parseFloat(e.target.value)
+             def.spread = def.gen.spread
              update()
            }}
     />
@@ -196,12 +200,14 @@ const RangeEditor = ({def,update}) => {
     <label className='sub'>min</label>
     <input type='number' value={def.gen.min} onChange={(e) => {
       def.gen.min = parseFloat(e.target.value)
+      def.min = def.gen.min
       update()
     }}/>
     <label className='sub'>max</label>
     <input type='number' value={def.gen.max}
            onChange={(e) => {
              def.gen.max = parseFloat(e.target.value)
+             def.max = def.gen.max
              update()
            }}
     />
@@ -211,6 +217,7 @@ const RangeEditor = ({def,update}) => {
 const PickEditor = ({def,update}) => {
   return <select value={def.value} onChange={(e)=>{
     def.gen.value = e.target.value
+    def.value = def.gen.value
     update()
   }}>
     {def.values.map(val => {
@@ -222,6 +229,7 @@ const PickEditor = ({def,update}) => {
 const RandomPickEditor = ({def,update}) => {
   return <select value={def.value} onChange={(e)=>{
     def.gen.value = e.target.value
+    def.value = def.gen.value
     update()
   }}>
     {def.values.map(val => {
@@ -355,6 +363,32 @@ const Gallery = ({gallery})=>{
 // setupMountainDoc()
 setupPosition2DDoc()
 
+let MAIN_DOC_KEY = 'maindoc'
+function loadPersisted(data) {
+  try {
+    let item = JSON.parse(localStorage.getItem(MAIN_DOC_KEY))
+    console.log("found", item)
+    if (!item) return data
+    if (!item.version) return data
+    if (item.version < data.version) return data
+    console.log("using persisted version", item)
+    fixup(item)
+    localStorage.clear()
+    return item
+  } catch(e) {
+    console.log("error parsing",e.message)
+    console.log(e)
+    return data
+  }
+}
+
+mainDoc.setData(loadPersisted(mainDoc.getData()))
+
+function persist(data) {
+  console.log("saving",data)
+  localStorage.setItem(MAIN_DOC_KEY,JSON.stringify(data))
+}
+
 const App = () => {
   const [count, setCount] = useState(0)
   const [doc, setDoc] = useState(mainDoc.getData())
@@ -365,7 +399,10 @@ const App = () => {
     mainDoc.on('change',handler)
     return () => mainDoc.off('change',handler)
   })
-  const forceUpdate = ()=>setCount(count+1)
+  const forceUpdate = ()=>{
+    setCount(count+1)
+    persist(mainDoc.getData())
+  }
   return (
       <VBox>
         <HBox>
