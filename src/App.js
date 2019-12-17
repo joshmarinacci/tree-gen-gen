@@ -385,7 +385,6 @@ function loadPersisted(data) {
 mainDoc.setData(loadPersisted(mainDoc.getData()))
 
 function persist(data) {
-  console.log("saving",data)
   localStorage.setItem(MAIN_DOC_KEY,JSON.stringify(data))
 }
 
